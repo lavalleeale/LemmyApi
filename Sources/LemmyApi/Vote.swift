@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-extension LemmyApi {
+public extension LemmyApi {
     func voteComment(id: Int, target: Int, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "comment/like", responseType: CommentView.self, body: CommentVote(auth: jwt!, comment_id: id, score: target), receiveValue: receiveValue)
     }
@@ -11,16 +11,16 @@ extension LemmyApi {
     }
     
     struct CommentVote: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let comment_id: Int
-        let score: Int
+        public let method = "POST"
+        public let auth: String
+        public let comment_id: Int
+        public let score: Int
     }
     
     struct PostVote: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let post_id: Int
-        let score: Int
+        public let method = "POST"
+        public let auth: String
+        public let post_id: Int
+        public let score: Int
     }
 }

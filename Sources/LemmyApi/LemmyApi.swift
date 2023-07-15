@@ -4,19 +4,53 @@ import OSLog
 
 let VERSION = "v3"
 
-class LemmyApi {
-    var apiUrl: URL
-    var baseUrl: String
+let formatter1 = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .gmt
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
+    return formatter
+}()
+
+let formatter2 = {
+    let formatter = DateFormatter()
+    formatter.locale = Locale(identifier: "en_US_POSIX")
+    formatter.timeZone = .gmt
+    formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
+    return formatter
+}()
+
+let decoder = {
+    let decoder = JSONDecoder()
+    decoder.dateDecodingStrategy = .custom { decoder -> Date in
+        let container = try decoder.singleValueContainer()
+        let dateStr = try container.decode(String.self)
+        var date: Date?
+        if dateStr.contains(".") {
+            date = formatter1.date(from: dateStr)
+        } else {
+            date = formatter2.date(from: dateStr)
+        }
+        guard let date_ = date else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateStr)")
+        }
+        return date_
+    }
+    return decoder
+}()
+
+public class LemmyApi {
+    public var apiUrl: URL
+    public var baseUrl: String
     private var cancellable: Set<AnyCancellable> = Set()
-    internal var jwt: String?
+    public var jwt: String?
     private var encoder = JSONEncoder()
-    private var decoder = JSONDecoder()
     
     public enum LemmyError: Swift.Error {
         case invalidUrl
     }
 
-    init(baseUrl: String) throws {
+    public init(baseUrl: String) throws {
         var baseUrl = baseUrl
         let regex = /https?:\/\//
         if !baseUrl.contains(regex) {
@@ -27,36 +61,13 @@ class LemmyApi {
             throw LemmyError.invalidUrl
         }
         self.apiUrl = apiUrl
-        let formatter1 = DateFormatter()
-        formatter1.locale = Locale(identifier: "en_US_POSIX")
-        formatter1.timeZone = .gmt
-        formatter1.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
-
-        let formatter2 = DateFormatter()
-        formatter2.locale = Locale(identifier: "en_US_POSIX")
-        formatter2.timeZone = .gmt
-        formatter2.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
-        decoder.dateDecodingStrategy = .custom { decoder -> Date in
-            let container = try decoder.singleValueContainer()
-            let dateStr = try container.decode(String.self)
-            var date: Date?
-            if dateStr.contains(".") {
-                date = formatter1.date(from: dateStr)
-            } else {
-                date = formatter2.date(from: dateStr)
-            }
-            guard let date_ = date else {
-                throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateStr)")
-            }
-            return date_
-        }
     }
     
-    func setJwt(jwt: String?) {
+    public func setJwt(jwt: String?) {
         self.jwt = jwt
     }
     
-    func makeRequestWithBody<ResponseType: Decodable, BodyType: Encodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, body: BodyType, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable where BodyType: WithMethod {
+    public func makeRequestWithBody<ResponseType: Decodable, BodyType: Encodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, body: BodyType, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable where BodyType: WithMethod {
         var url = apiUrl.appending(path: path).appending(queryItems: query)
         os_log("url %{public}s", url.absoluteString)
         if jwt != nil {
@@ -89,7 +100,7 @@ class LemmyApi {
                 Just(v.data)
                 
                     // #2 try to decode data as a `Response`
-                    .decode(type: ResponseType.self, decoder: self.decoder)
+                    .decode(type: ResponseType.self, decoder: decoder)
                 
                     .mapError { error in
                         let decodingError = NetworkError.decoding(
@@ -119,11 +130,11 @@ class LemmyApi {
         let method = "GET"
     }
     
-    func makeRequest<ResponseType: Decodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable {
+    public func makeRequest<ResponseType: Decodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: path, query: query, responseType: responseType, body: NoBody(), receiveValue: receiveValue)
     }
     
-    func getUser(name: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, saved: Bool, receiveValue: @escaping (LemmyApi.PersonView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getUser(name: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, saved: Bool, receiveValue: @escaping (LemmyApi.PersonView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
             sortString += time.rawValue
@@ -135,300 +146,324 @@ class LemmyApi {
         return makeRequest(path: "user", query: query, responseType: PersonView.self, receiveValue: receiveValue)
     }
     
-    func getPost(id: Int, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getPost(id: Int, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "id", value: String(id))]
         return makeRequest(path: "post", query: query, responseType: PostView.self, receiveValue: receiveValue)
     }
     
-    func getComment(id: Int, receiveValue: @escaping (LemmyApi.CommentView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getComment(id: Int, receiveValue: @escaping (LemmyApi.CommentView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "id", value: String(id))]
         return makeRequest(path: "comment", query: query, responseType: CommentView.self, receiveValue: receiveValue)
     }
     
-    func getCommunity(name: String, receiveValue: @escaping (LemmyApi.CommunityView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getCommunity(name: String, receiveValue: @escaping (LemmyApi.CommunityView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "name", value: name)]
         return makeRequest(path: "community", query: query, responseType: CommunityView.self, receiveValue: receiveValue)
     }
     
-    func getSiteInfo(receiveValue: @escaping (LemmyApi.SiteInfo?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getSiteInfo(receiveValue: @escaping (LemmyApi.SiteInfo?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         return makeRequest(path: "site", query: [], responseType: SiteInfo.self, receiveValue: receiveValue)
     }
     
-    func getUnreadCount(receiveValue: @escaping (LemmyApi.UnreadCount?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getUnreadCount(receiveValue: @escaping (LemmyApi.UnreadCount?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         return makeRequest(path: "user/unread_count", query: [], responseType: UnreadCount.self, receiveValue: receiveValue)
     }
     
-    func follow(communityId: Int, follow: Bool, receiveValue: @escaping (CommunityView?, NetworkError?) -> Void) -> AnyCancellable {
+    public func follow(communityId: Int, follow: Bool, receiveValue: @escaping (CommunityView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "community/follow", responseType: CommunityView.self, body: FollowPaylod(auth: jwt!, community_id: communityId, follow: follow), receiveValue: receiveValue)
     }
     
-    func register(info: RegisterPayload, receiveValue: @escaping (AuthResponse?, NetworkError?) -> Void) -> AnyCancellable {
+    public func register(info: RegisterPayload, receiveValue: @escaping (AuthResponse?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "user/register", responseType: AuthResponse.self, body: info, receiveValue: receiveValue)
     }
     
-    func login(info: LoginPayload, receiveValue: @escaping (AuthResponse?, NetworkError?) -> Void) -> AnyCancellable {
+    public func login(info: LoginPayload, receiveValue: @escaping (AuthResponse?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "user/login", responseType: AuthResponse.self, body: info, receiveValue: receiveValue)
     }
     
-    func getCaptcha(receiveValue: @escaping (CaptchaResponse?, NetworkError?) -> Void) -> AnyCancellable {
+    public func getCaptcha(receiveValue: @escaping (CaptchaResponse?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequest(path: "user/get_captcha", responseType: CaptchaResponse.self, receiveValue: receiveValue)
     }
     
-    func readReply(replyId: Int, read: Bool, receiveValue: @escaping (CommentReplyView?, NetworkError?) -> Void) -> AnyCancellable {
+    public func readReply(replyId: Int, read: Bool, receiveValue: @escaping (CommentReplyView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "comment/mark_as_read", responseType: CommentReplyView.self, body: ReadPayload(auth: jwt!, comment_reply_id: replyId, private_message_id: nil, read: read), receiveValue: receiveValue)
     }
     
-    func readMessage(messageId: Int, read: Bool, receiveValue: @escaping (PrivateMessageView?, NetworkError?) -> Void) -> AnyCancellable {
+    public func readMessage(messageId: Int, read: Bool, receiveValue: @escaping (PrivateMessageView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "private_message/mark_as_read", responseType: PrivateMessageView.self, body: ReadPayload(auth: jwt!, comment_reply_id: nil, private_message_id: messageId, read: read), receiveValue: receiveValue)
     }
     
-    func sendMessage(to: Int, content: String, receiveValue: @escaping (PrivateMessageView?, NetworkError?) -> Void) -> AnyCancellable {
+    public func sendMessage(to: Int, content: String, receiveValue: @escaping (PrivateMessageView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "private_message", responseType: PrivateMessageView.self, body: MessagePayload(auth: jwt!, content: content, recipient_id: to), receiveValue: receiveValue)
     }
     
-    struct MessagePayload: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let content: String
-        let recipient_id: Int
+    public struct MessagePayload: Codable, WithMethod {
+        public let method = "POST"
+        public let auth: String
+        public let content: String
+        public let recipient_id: Int
     }
     
-    struct CommentReplyView: Codable {
-        let comment_reply_view: ApiComment
+    public struct CommentReplyView: Codable {
+        public let comment_reply_view: ApiComment
     }
     
-    struct ReadPayload: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let comment_reply_id: Int?
-        let private_message_id: Int?
-        let read: Bool
+    public struct ReadPayload: Codable, WithMethod {
+        public let method = "POST"
+        public let auth: String
+        public let comment_reply_id: Int?
+        public let private_message_id: Int?
+        public let read: Bool
     }
     
-    struct Replies: Codable {
-        let replies: [ApiComment]
+    public struct Replies: Codable {
+        public let replies: [ApiComment]
     }
     
-    struct ReplyInfo: Codable {
-        var read: Bool
-        let id: Int
+    public struct ReplyInfo: Codable {
+        public var read: Bool
+        public let id: Int
     }
     
-    struct UnreadCount: Codable {
-        let replies: Int
-        let mentions: Int
-        let private_messages: Int
+    public struct UnreadCount: Codable {
+        public let replies: Int
+        public let mentions: Int
+        public let private_messages: Int
     }
     
-    struct LoginPayload: Codable, WithMethod {
-        let method = "POST"
-        let username_or_email: String
-        let password: String
-        let totp_2fa_token: String?
+    public struct LoginPayload: Codable, WithMethod {
+        public init(username_or_email: String, password: String, totp_2fa_token: String? = nil) {
+            self.username_or_email = username_or_email
+            self.password = password
+            self.totp_2fa_token = totp_2fa_token
+        }
+
+        public let method = "POST"
+        public let username_or_email: String
+        public let password: String
+        public let totp_2fa_token: String?
     }
     
-    struct CaptchaResponse: Codable {
-        let ok: CaptchaInfo
+    public struct CaptchaResponse: Codable {
+        public let ok: CaptchaInfo
     }
     
-    struct CaptchaInfo: Codable {
-        let png: String
-        let uuid: String
+    public struct CaptchaInfo: Codable {
+        public let png: String
+        public let uuid: String
     }
     
-    struct RegisterPayload: Codable, WithMethod {
-        let method = "POST"
-        let username: String
-        let password: String
-        let password_verify: String
-        let email: String
-        let captcha_answer: String
-        let captcha_uuid: String
-        let show_nsfw = false
+    public struct RegisterPayload: Codable, WithMethod {
+        public init(username: String, password: String, password_verify: String, email: String, captcha_answer: String, captcha_uuid: String) {
+            self.username = username
+            self.password = password
+            self.password_verify = password_verify
+            self.email = email
+            self.captcha_answer = captcha_answer
+            self.captcha_uuid = captcha_uuid
+        }
+
+        public let method = "POST"
+        public let username: String
+        public let password: String
+        public let password_verify: String
+        public let email: String
+        public let captcha_answer: String
+        public let captcha_uuid: String
+        public let show_nsfw = false
     }
     
-    struct AuthResponse: Codable {
-        let jwt: String?
-        let registration_created: Bool?
-        let verify_email_sent: Bool?
+    public struct AuthResponse: Codable {
+        public let jwt: String?
+        public let registration_created: Bool?
+        public let verify_email_sent: Bool?
     }
     
-    struct ErrorResponse: Codable {
-        let error: String
+    public struct ErrorResponse: Codable {
+        public let error: String
     }
     
-    struct FollowPaylod: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let community_id: Int
-        let follow: Bool
+    public struct FollowPaylod: Codable, WithMethod {
+        public let method = "POST"
+        public let auth: String
+        public let community_id: Int
+        public let follow: Bool
     }
 
-    enum NetworkError: Swift.Error {
+    public enum NetworkError: Swift.Error {
         case network(code: Int, description: String)
         case decoding(message: String, error: DecodingError)
     }
     
-    struct CommentView: Codable {
-        let comment_view: ApiComment
+    public struct CommentView: Codable {
+        public let comment_view: ApiComment
     }
     
-    struct PersonView: Codable, Identifiable {
-        var id: Int {
+    public struct PersonView: Codable, Identifiable {
+        public var id: Int {
             person_view.person.id
         }
         
-        let person_view: ApiUser
-        let comments: [ApiComment]?
-        let posts: [ApiPost]?
+        public let person_view: ApiUser
+        public let comments: [ApiComment]?
+        public let posts: [ApiPost]?
     }
     
-    struct ApiUser: Codable, Identifiable {
-        var id: Int {
+    public struct ApiUser: Codable, Identifiable {
+        public var id: Int {
             person.id
         }
 
-        let person: ApiUserData
-        let counts: ApiUserCounts
+        public let person: ApiUserData
+        public let counts: ApiUserCounts
     }
     
-    struct CommunityView: Codable {
-        let community_view: ApiCommunity
+    public struct CommunityView: Codable {
+        public let community_view: ApiCommunity
     }
     
-    struct PostView: Codable {
-        let post_view: ApiPost
+    public struct PostView: Codable {
+        public let post_view: ApiPost
     }
     
-    struct ApiComment: Codable, Identifiable, WithCounts {
-        var id: Int { comment.id }
+    public struct ApiComment: Codable, Identifiable, WithCounts {
+        public var id: Int { comment.id }
         
-        let comment: ApiCommentData
-        let creator: ApiUserData
-        let post: ApiPostData
-        let counts: ApiCommentCounts
-        let my_vote: Int?
-        let saved: Bool?
-        var comment_reply: ReplyInfo?
+        public let comment: ApiCommentData
+        public let creator: ApiUserData
+        public let post: ApiPostData
+        public let counts: ApiCommentCounts
+        public let my_vote: Int?
+        public let saved: Bool?
+        public var comment_reply: ReplyInfo?
     }
     
-    struct ApiCommentData: Codable {
-        let id: Int
-        let content: String
-        let path: String
-        let ap_id: URL
-        let local: Bool
+    public struct ApiCommentData: Codable {
+        public let id: Int
+        public let content: String
+        public let path: String
+        public let ap_id: URL
+        public let local: Bool
     }
     
-    struct ApiPost: Codable, Identifiable, WithCounts {
-        var id: Int { post.id }
+    public struct ApiPost: Codable, Identifiable, WithCounts {
+        public init(post: LemmyApi.ApiPostData, creator: LemmyApi.ApiUserData, community: LemmyApi.ApiCommunityData, counts: LemmyApi.ApiPostCounts, my_vote: Int? = nil, saved: Bool? = nil) {
+            self.post = post
+            self.creator = creator
+            self.community = community
+            self.counts = counts
+            self.my_vote = my_vote
+            self.saved = saved
+        }
+
+        public var id: Int { post.id }
         
-        let post: ApiPostData
-        let creator: ApiUserData
-        let community: ApiCommunityData
-        let counts: ApiPostCounts
-        let my_vote: Int?
-        let saved: Bool?
+        public let post: ApiPostData
+        public let creator: ApiUserData
+        public let community: ApiCommunityData
+        public let counts: ApiPostCounts
+        public let my_vote: Int?
+        public let saved: Bool?
     }
     
-    struct ApiUserData: Codable, WithPublished, WithNameHost, Identifiable {
-        let name: String
-        let id: Int
-        let actor_id: URL
-        let published: Date
-        let avatar: URL?
-        let local: Bool
+    public struct ApiUserData: Codable, WithPublished, WithNameHost, Identifiable {
+        public let name: String
+        public let id: Int
+        public let actor_id: URL
+        public let published: Date
+        public let avatar: URL?
+        public let local: Bool
         
-        var icon: URL? {
+        public var icon: URL? {
             avatar
         }
     }
     
-    struct ApiCommunity: Codable, Identifiable {
-        var id: Int { community.id }
-        let community: ApiCommunityData
-        let subscribed: String
-        let counts: ApiCommunityCounts
-        let blocked: Bool?
+    public struct ApiCommunity: Codable, Identifiable {
+        public var id: Int { community.id }
+        public let community: ApiCommunityData
+        public let subscribed: String
+        public let counts: ApiCommunityCounts
+        public let blocked: Bool?
     }
     
-    struct ApiCommunityCounts: Codable {
-        let published: Date
-        let subscribers: Int
+    public struct ApiCommunityCounts: Codable {
+        public let published: Date
+        public let subscribers: Int
     }
     
-    struct ApiCommunityData: Codable, Identifiable, WithNameHost {
-        let id: Int
-        let name: String
-        let icon: URL?
-        let actor_id: URL
-        let local: Bool
+    public struct ApiCommunityData: Codable, Identifiable, WithNameHost {
+        public let id: Int
+        public let name: String
+        public let icon: URL?
+        public let actor_id: URL
+        public let local: Bool
     }
     
-    struct ApiPostData: Codable {
-        let id: Int
-        let name: String
+    public struct ApiPostData: Codable {
+        public let id: Int
+        public let name: String
         
-        let body: String?
-        let thumbnail_url: URL?
-        let url: URL?
-        let creator_id: Int
-        let nsfw: Bool
-        let ap_id: URL
-        let local: Bool
-        let featured_community: Bool
-        let featured_local: Bool
+        public let body: String?
+        public let thumbnail_url: URL?
+        public let url: URL?
+        public let creator_id: Int
+        public let nsfw: Bool
+        public let ap_id: URL
+        public let local: Bool
+        public let featured_community: Bool
+        public let featured_local: Bool
     }
     
-    struct ApiPostCounts: Codable, WithPublished {
-        let score: Int
-        let comments: Int
-        let published: Date
+    public struct ApiPostCounts: Codable, WithPublished {
+        public let score: Int
+        public let comments: Int
+        public let published: Date
     }
     
-    struct ApiCommentCounts: Codable, WithPublished {
-        let score: Int
-        let child_count: Int
-        let published: Date
+    public struct ApiCommentCounts: Codable, WithPublished {
+        public let score: Int
+        public let child_count: Int
+        public let published: Date
     }
     
-    struct ApiUserCounts: Codable {
-        let comment_score: Int
-        let post_score: Int
-        let comment_count: Int
-        let post_count: Int
+    public struct ApiUserCounts: Codable {
+        public let comment_score: Int
+        public let post_score: Int
+        public let comment_count: Int
+        public let post_count: Int
     }
     
-    struct SiteInfo: Codable {
-        let my_user: MyUser?
-        let site_view: SiteView
+    public struct SiteInfo: Codable {
+        public let my_user: MyUser?
+        public let site_view: SiteView
     }
     
-    struct SiteView: Codable {
-        let site: Site
+    public struct SiteView: Codable {
+        public let site: Site
     }
     
-    struct Site: Codable {
-        let name: String
-        let description: String?
+    public struct Site: Codable {
+        public let name: String
+        public let description: String?
     }
     
-    struct MyUser: Codable {
-        let follows: [Follower]
+    public struct MyUser: Codable {
+        public let follows: [Follower]
     }
     
-    struct Follower: Codable {
-        let community: ApiCommunityData
+    public struct Follower: Codable {
+        public let community: ApiCommunityData
     }
     
-    enum TopTime: String, CaseIterable, Codable {
+    public enum TopTime: String, CaseIterable, Codable {
         case Hour, SixHour, TwelveHour, Day, Week, Month, Year, All
     }
     
-    enum Sort: String, CaseIterable, Codable {
+    public enum Sort: String, CaseIterable, Codable {
         case Hot, Active, New, Old, MostComments, NewComments, Top
         
-        var image: String {
+        public var image: String {
             switch self {
             case .Top: return "rosette"
             case .Hot: return "flame"
@@ -439,14 +474,14 @@ class LemmyApi {
             }
         }
 
-        var comments: Bool {
+        public var comments: Bool {
             switch self {
             case .MostComments, .NewComments, .Active: return false
             default: return true
             }
         }
         
-        var hasTime: Bool {
+        public var hasTime: Bool {
             switch self {
             case .Top: return true
             default: return false
@@ -455,11 +490,11 @@ class LemmyApi {
     }
 }
 
-protocol WithPublished {
+public protocol WithPublished {
     var published: Date { get }
 }
 
-protocol WithCounts: Identifiable {
+public protocol WithCounts: Identifiable {
     associatedtype T: WithPublished
     var counts: T { get }
     var id: Int { get }
@@ -560,11 +595,11 @@ extension Publishers {
     }
 }
 
-protocol WithMethod {
+public protocol WithMethod {
     var method: String { get }
 }
 
-protocol WithNameHost {
+public protocol WithNameHost {
     var actor_id: URL { get }
     var name: String { get }
     var icon: URL? { get }

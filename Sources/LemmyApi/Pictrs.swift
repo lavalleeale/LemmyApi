@@ -1,8 +1,8 @@
 import Foundation
 
-extension LemmyApi {
+public extension LemmyApi {
     func deletePhoto(data: File) {
-        var request = URLRequest(url: URL(string: "\(self.baseUrl)/pictrs/image/delete/\(data.delete_token)/\(data.file)")!)
+        let request = URLRequest(url: URL(string: "\(self.baseUrl)/pictrs/image/delete/\(data.delete_token)/\(data.file)")!)
         URLSession.shared.dataTask(with: request).resume()
     }
     func uploadPhoto(data: Data, mimeType: String, callback: @escaping (Double)->Void, doneCallback: @escaping(PictrsResponse?, LemmyApi.NetworkError?)->Void) {
@@ -41,24 +41,24 @@ extension LemmyApi {
         }
     }
     struct PictrsResponse: Codable {
-        let msg: String
-        let files: [File]
+        public let msg: String
+        public let files: [File]
     }
     
     struct File: Codable, Equatable {
-        let file: String
-        let delete_token: String
+        public let file: String
+        public let delete_token: String
     }
 }
 
-class UploadDelegate: NSObject, URLSessionTaskDelegate {
-    let callback: (Double) -> Void
+public class UploadDelegate: NSObject, URLSessionTaskDelegate {
+    public let callback: (Double) -> Void
     
-    init(callback: @escaping (Double) -> Void) {
+    public init(callback: @escaping (Double) -> Void) {
         self.callback = callback
     }
     
-    func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
+    public func urlSession(_ session: URLSession, task: URLSessionTask, didSendBodyData bytesSent: Int64, totalBytesSent: Int64, totalBytesExpectedToSend: Int64) {
         callback(Double(totalBytesSent) / Double(totalBytesExpectedToSend))
     }
 }

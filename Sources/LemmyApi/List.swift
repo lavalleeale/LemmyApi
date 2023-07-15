@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-extension LemmyApi {
+public extension LemmyApi {
     func getPosts(path: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
@@ -48,41 +48,41 @@ extension LemmyApi {
     }
     
     struct PrivateMessageView: Codable {
-        let private_message_view: Message
+        public let private_message_view: Message
     }
 
     struct ApiComments: Codable {
-        let comments: [ApiComment]
+        public let comments: [ApiComment]
     }
     
     struct ApiPosts: Codable {
-        let posts: [ApiPost]
+        public let posts: [ApiPost]
     }
     
     struct ApiCommunities: Codable {
-        let communities: [ApiCommunity]
+        public let communities: [ApiCommunity]
     }
     
     struct ApiUsers: Codable {
-        let users: [ApiUser]
+        public let users: [ApiUser]
     }
     
     struct Messages: Codable {
-        let private_messages: [Message]
+        public let private_messages: [Message]
     }
     
     struct Message: Codable {
-        var id: Int {
+        public var id: Int {
             private_message.id
         }
-        let creator: ApiUserData
-        var private_message: MessageContent
+        public let creator: ApiUserData
+        public var private_message: MessageContent
     }
     
     struct MessageContent: Codable, WithPublished {
-        let content: String
-        let published: Date
-        var read: Bool
-        let id: Int
+        public let content: String
+        public let published: Date
+        public var read: Bool
+        public let id: Int
     }
 }

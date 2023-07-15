@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-extension LemmyApi {
+public extension LemmyApi {
     func blockCommunity(id: Int, block: Bool, receiveValue: @escaping (LemmyApi.CommunityView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "community/block", responseType: CommunityView.self, body: CommunityBlockInfo(auth: jwt!, block: block, community_id: id), receiveValue: receiveValue)
     }
@@ -11,16 +11,16 @@ extension LemmyApi {
     }
     
     struct CommunityBlockInfo: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let block: Bool
-        let community_id: Int
+        public let method = "POST"
+        public let auth: String
+        public let block: Bool
+        public let community_id: Int
     }
     
     struct UserBlockInfo: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let block: Bool
-        let person_id: Int
+        public let method = "POST"
+        public let auth: String
+        public let block: Bool
+        public let person_id: Int
     }
 }

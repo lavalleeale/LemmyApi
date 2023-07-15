@@ -1,7 +1,7 @@
 import Foundation
 import Combine
 
-extension LemmyApi {
+public extension LemmyApi {
     func searchCommunities(query: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiCommunities?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
@@ -29,7 +29,7 @@ extension LemmyApi {
         return makeRequest(path: "search", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
     }
 }
-extension LemmyApi.Sort {
+public extension LemmyApi.Sort {
     var search: Bool {
         switch self {
         case .New, .Old, .Top:

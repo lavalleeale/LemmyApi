@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-extension LemmyApi {
+public extension LemmyApi {
     func createPost(title: String, content: String, url: String, communityId: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
         var body: SentPost {
             return SentPost(auth: self.jwt!, community_id: communityId, name: title, url: url == "" ? nil : url, body: content)
@@ -18,26 +18,26 @@ extension LemmyApi {
     }
     
     struct SentPost: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let community_id: Int
-        let name: String
-        let url: String?
-        let body: String?
+        public let method = "POST"
+        public let auth: String
+        public let community_id: Int
+        public let name: String
+        public let url: String?
+        public let body: String?
     }
     
     struct SentComment: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let content: String
-        let parent_id: Int?
-        let post_id: Int
+        public let method = "POST"
+        public let auth: String
+        public let content: String
+        public let parent_id: Int?
+        public let post_id: Int
     }
     
     struct EditedComment: Codable, WithMethod {
-        let method = "PUT"
-        let auth: String
-        let content: String
-        let comment_id: Int
+        public let method = "PUT"
+        public let auth: String
+        public let content: String
+        public let comment_id: Int
     }
 }

@@ -3,7 +3,7 @@ import Foundation
 import Combine
 import Foundation
 
-extension LemmyApi {
+public extension LemmyApi {
     func reportComment(commentId: Int, reason: String, receiveValue: @escaping (CommentReportResponse?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "comment/report", responseType: CommentReportResponse.self, body: CommentReport(auth: jwt!, comment_id: commentId, reason: reason), receiveValue: receiveValue)
     }
@@ -13,24 +13,24 @@ extension LemmyApi {
     }
 
     struct PostReportResponse: Codable {
-        let post_report_view: ApiPost
+        public let post_report_view: ApiPost
     }
     
     struct PostReport: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let post_id: Int
-        let reason: String
+        public let method = "POST"
+        public let auth: String
+        public let post_id: Int
+        public let reason: String
     }
 
     struct CommentReportResponse: Codable {
-        let comment_report_view: ApiComment
+        public let comment_report_view: ApiComment
     }
 
     struct CommentReport: Codable, WithMethod {
-        let method = "POST"
-        let auth: String
-        let comment_id: Int
-        let reason: String
+        public let method = "POST"
+        public let auth: String
+        public let comment_id: Int
+        public let reason: String
     }
 }
