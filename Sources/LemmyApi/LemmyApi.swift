@@ -343,7 +343,11 @@ public class LemmyApi {
         public let post_view: ApiPost
     }
     
-    public struct ApiComment: Codable, Identifiable, WithCounts {
+    public struct ApiComment: Codable, Identifiable, Equatable, WithCounts {
+        public static func == (lhs: LemmyApi.ApiComment, rhs: LemmyApi.ApiComment) -> Bool {
+            lhs.id == rhs.id
+        }
+        
         public var id: Int { comment.id }
         
         public let comment: ApiCommentData
