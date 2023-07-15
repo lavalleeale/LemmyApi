@@ -110,6 +110,18 @@ public class LemmyApi {
                         os_log("\(error)")
                         return decodingError
                     }
+                    // #3 if decoding fails,
+                    .tryCatch { decodingError in
+                        Just(v.data)
+                            // #3.1 ... decode as an `ErrorResponse`
+                            .decode(type: ErrorData.self, decoder: decoder)
+                                    
+                            // #4 if both fail, throw APIError.decoding
+                            .mapError { _ in decodingError }
+                                    
+                            // #3.2 ... and throw `APIError.api
+                            .tryMap { throw NetworkError.lemmyError(message: $0.error) }
+                    }
             }
             .mapError { $0 as! LemmyApi.NetworkError }
             .receive(on: DispatchQueue.main)
@@ -195,6 +207,10 @@ public class LemmyApi {
     
     public func sendMessage(to: Int, content: String, receiveValue: @escaping (PrivateMessageView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "private_message", responseType: PrivateMessageView.self, body: MessagePayload(auth: jwt!, content: content, recipient_id: to), receiveValue: receiveValue)
+    }
+    
+    public struct ErrorData: Codable {
+        public let error: String
     }
     
     public struct MessagePayload: Codable, WithMethod {
@@ -292,6 +308,7 @@ public class LemmyApi {
 
     public enum NetworkError: Swift.Error {
         case network(code: Int, description: String)
+        case lemmyError(message: String)
         case decoding(message: String, error: DecodingError)
     }
     
