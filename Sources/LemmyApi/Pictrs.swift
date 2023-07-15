@@ -1,11 +1,11 @@
 import Foundation
 
-extension LemmyHttp {
+extension LemmyApi {
     func deletePhoto(data: File) {
         var request = URLRequest(url: URL(string: "\(self.baseUrl)/pictrs/image/delete/\(data.delete_token)/\(data.file)")!)
         URLSession.shared.dataTask(with: request).resume()
     }
-    func uploadPhoto(data: Data, mimeType: String, callback: @escaping (Double)->Void, doneCallback: @escaping(PictrsResponse?, LemmyHttp.NetworkError?)->Void) {
+    func uploadPhoto(data: Data, mimeType: String, callback: @escaping (Double)->Void, doneCallback: @escaping(PictrsResponse?, LemmyApi.NetworkError?)->Void) {
         let delegate = UploadDelegate(callback: callback)
         Task {
             var request = URLRequest(url: URL(string: "\(self.baseUrl)/pictrs/image")!)

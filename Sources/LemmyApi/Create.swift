@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-extension LemmyHttp {
+extension LemmyApi {
     func createPost(title: String, content: String, url: String, communityId: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
         var body: SentPost {
             return SentPost(auth: self.jwt!, community_id: communityId, name: title, url: url == "" ? nil : url, body: content)

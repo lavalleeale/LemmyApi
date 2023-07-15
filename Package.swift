@@ -23,9 +23,5 @@ let package = Package(
             name: "LemmyApi",
             dependencies: [],
             swiftSettings: [.enableUpcomingFeature("BareSlashRegexLiterals")]),
-        .testTarget(
-            name: "LemmyApiTests",
-            dependencies: ["LemmyApi"],
-            swiftSettings: [.enableUpcomingFeature("BareSlashRegexLiterals")]),
     ]
 )

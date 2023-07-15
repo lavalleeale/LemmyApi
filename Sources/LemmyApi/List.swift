@@ -1,8 +1,8 @@
 import Combine
 import Foundation
 
-extension LemmyHttp {
-    func getPosts(path: String, page: Int, sort: LemmyHttp.Sort, time: LemmyHttp.TopTime, receiveValue: @escaping (LemmyHttp.ApiPosts?, LemmyHttp.NetworkError?) -> Void) -> AnyCancellable {
+extension LemmyApi {
+    func getPosts(path: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
             sortString += time.rawValue
@@ -20,7 +20,7 @@ extension LemmyHttp {
         return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
     }
 
-    func getComments(postId: Int, parentId: Int? = nil, sort: LemmyHttp.Sort, receiveValue: @escaping (LemmyHttp.ApiComments?, LemmyHttp.NetworkError?) -> Void) -> AnyCancellable {
+    func getComments(postId: Int, parentId: Int? = nil, sort: LemmyApi.Sort, receiveValue: @escaping (LemmyApi.ApiComments?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var query = [URLQueryItem(name: "sort", value: sort.rawValue), URLQueryItem(name: "post_id", value: String(postId)), URLQueryItem(name: "max_depth", value: "8"), URLQueryItem(name: "type_", value: "All")]
         if let parentId = parentId {
             query.append(URLQueryItem(name: "parent_id", value: String(parentId)))
@@ -28,17 +28,17 @@ extension LemmyHttp {
         return makeRequest(path: "comment/list", query: query, responseType: ApiComments.self, receiveValue: receiveValue)
     }
     
-    func getReplies(page: Int, sort: Sort, unread: Bool, receiveValue: @escaping (LemmyHttp.Replies?, LemmyHttp.NetworkError?) -> Void) -> AnyCancellable {
+    func getReplies(page: Int, sort: Sort, unread: Bool, receiveValue: @escaping (LemmyApi.Replies?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "sort", value: sort.rawValue), URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "unread_only", value: String(unread))]
         return makeRequest(path: "user/replies", query: query, responseType: Replies.self, receiveValue: receiveValue)
     }
     
-    func getMessages(page: Int, sort: Sort, unread: Bool, receiveValue: @escaping (LemmyHttp.Messages?, LemmyHttp.NetworkError?) -> Void) -> AnyCancellable {
+    func getMessages(page: Int, sort: Sort, unread: Bool, receiveValue: @escaping (LemmyApi.Messages?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "sort", value: sort.rawValue), URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "unread_only", value: String(unread))]
         return makeRequest(path: "private_message/list", query: query, responseType: Messages.self, receiveValue: receiveValue)
     }
     
-    func getCommunities(page: Int, sort: LemmyHttp.Sort, time: LemmyHttp.TopTime, limit: Int = 10, receiveValue: @escaping (LemmyHttp.ApiCommunities?, LemmyHttp.NetworkError?) -> Void) -> AnyCancellable {
+    func getCommunities(page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 10, receiveValue: @escaping (LemmyApi.ApiCommunities?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
             sortString += time.rawValue

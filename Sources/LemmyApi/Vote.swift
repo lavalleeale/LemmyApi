@@ -1,7 +1,7 @@
 import Combine
 import Foundation
 
-extension LemmyHttp {
+extension LemmyApi {
     func voteComment(id: Int, target: Int, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "comment/like", responseType: CommentView.self, body: CommentVote(auth: jwt!, comment_id: id, score: target), receiveValue: receiveValue)
     }

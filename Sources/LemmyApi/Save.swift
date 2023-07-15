@@ -1,8 +1,8 @@
 import Foundation
 import Combine
 
-extension LemmyHttp {
-    func savePost(save: Bool, post_id: Int, receiveValue: @escaping (LemmyHttp.PostView?, LemmyHttp.NetworkError?) -> Void) -> AnyCancellable {
+extension LemmyApi {
+    func savePost(save: Bool, post_id: Int, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "post/save", query: [], responseType: PostView.self, body: PostSave(auth: jwt!, post_id: post_id, save: save), receiveValue: receiveValue)
     }
     

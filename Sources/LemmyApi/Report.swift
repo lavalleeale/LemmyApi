@@ -3,7 +3,7 @@ import Foundation
 import Combine
 import Foundation
 
-extension LemmyHttp {
+extension LemmyApi {
     func reportComment(commentId: Int, reason: String, receiveValue: @escaping (CommentReportResponse?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "comment/report", responseType: CommentReportResponse.self, body: CommentReport(auth: jwt!, comment_id: commentId, reason: reason), receiveValue: receiveValue)
     }
