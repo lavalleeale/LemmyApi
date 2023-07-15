@@ -467,6 +467,7 @@ public class LemmyApi {
     
     public struct MyUser: Codable {
         public let follows: [Follower]
+        public let local_user_view: ApiUser
     }
     
     public struct Follower: Codable {
