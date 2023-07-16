@@ -14,7 +14,7 @@ let package = Package(
     ],
     dependencies: [
         .package(url: "https://github.com/cx-org/CXShim", .upToNextMinor(from: "0.4.0")),
-        .package(url: "https://github.com/cx-org/CombineX", from: "0.4.0"),
+        .package(url: "https://github.com/lavalleeale/CombineX", branch: "master"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
