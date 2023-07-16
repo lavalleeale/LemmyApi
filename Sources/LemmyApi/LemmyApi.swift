@@ -92,7 +92,7 @@ public class LemmyApi {
                 if code != 200 {
                     os_log("body %{public}s", String(data: v.data, encoding: .utf8) ?? "")
                     if let decoded = try? decoder.decode(ErrorData.self, from: v.data) {
-                        throw NetworkError.lemmyError(message: decoded.error)
+                        throw NetworkError.lemmyError(message: decoded.error, code: code)
                     }
                     throw NetworkError.network(code: code, description: String(data: v.data, encoding: .utf8) ?? "")
                 }
@@ -123,7 +123,7 @@ public class LemmyApi {
                             .mapError { _ in decodingError }
                                     
                             // #3.2 ... and throw `APIError.api
-                            .tryMap { throw NetworkError.lemmyError(message: $0.error) }
+                            .tryMap { throw NetworkError.lemmyError(message: $0.error, code: 200) }
                     }
             }
             .mapError { $0 as! LemmyApi.NetworkError }
@@ -311,7 +311,7 @@ public class LemmyApi {
 
     public enum NetworkError: Swift.Error {
         case network(code: Int, description: String)
-        case lemmyError(message: String)
+        case lemmyError(message: String, code: Int)
         case decoding(message: String, error: DecodingError)
     }
     
@@ -560,18 +560,27 @@ public extension Publisher {
         scheduler: S
     ) -> AnyPublisher<Output, Failure> where S: Scheduler {
         delayIfFailure(for: delay, scheduler: scheduler) { error in
-            if let error = error as? LemmyApi.NetworkError, case let .network(code, _) = error {
-                return !(code <= 0 || (code >= 400 && code < 500))
-            } else {
-                return true
+            if let error = error as? LemmyApi.NetworkError {
+                switch error {
+                case .lemmyError(message: _, code: let code), .network(code: let code, description: _):
+                    debugPrint(code)
+                    return !(code <= 0 || (code >= 400 && code < 500))
+                default:
+                    return true
+                }
             }
+            return true
         }
         .retry(times: retries) { error in
-            if let error = error as? LemmyApi.NetworkError, case let .network(code, _) = error, code >= 400, code < 500 {
-                return false
-            } else {
-                return true
+            if let error = error as? LemmyApi.NetworkError {
+                switch error {
+                case .lemmyError(message: _, code: let code), .network(code: let code, description: _):
+                    return !(code <= 0 || (code >= 400 && code < 500))
+                default:
+                    return true
+                }
             }
+            return true
         }
         .eraseToAnyPublisher()
     }
