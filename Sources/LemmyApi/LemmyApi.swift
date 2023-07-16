@@ -370,7 +370,7 @@ public class LemmyApi {
         public let local: Bool
     }
     
-    public struct ApiPost: Codable, Identifiable, WithCounts {
+    public struct ApiPost: Codable, Identifiable, Hashable, WithCounts {
         public init(post: LemmyApi.ApiPostData, creator: LemmyApi.ApiUserData, community: LemmyApi.ApiCommunityData, counts: LemmyApi.ApiPostCounts, my_vote: Int? = nil, saved: Bool? = nil) {
             self.post = post
             self.creator = creator
@@ -378,6 +378,14 @@ public class LemmyApi {
             self.counts = counts
             self.my_vote = my_vote
             self.saved = saved
+        }
+        
+        public static func == (lhs: LemmyApi.ApiPost, rhs: LemmyApi.ApiPost) -> Bool {
+            lhs.id == rhs.id
+        }
+        
+        public func hash(into hasher: inout Hasher) {
+            hasher.combine(id)
         }
 
         public var id: Int { post.id }
