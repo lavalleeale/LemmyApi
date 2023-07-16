@@ -1,7 +1,11 @@
-import CXShim
 import Foundation
 #if canImport(OSLog)
 import OSLog
+#endif
+#if canImport(Combine)
+import Combine
+#else
+import CombineX
 #endif
 import Foundation
 #if canImport(FoundationNetworking)
@@ -13,7 +17,7 @@ let VERSION = "v3"
 let formatter1 = {
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = .gmt
+    formatter.timeZone = TimeZone(identifier: "GMT")
     formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss.SSS"
     return formatter
 }()
@@ -21,7 +25,7 @@ let formatter1 = {
 let formatter2 = {
     let formatter = DateFormatter()
     formatter.locale = Locale(identifier: "en_US_POSIX")
-    formatter.timeZone = .gmt
+    formatter.timeZone = TimeZone(identifier: "GMT")
     formatter.dateFormat = "yyyy-MM-dd'T'HH:mm:ss"
     return formatter
 }()
@@ -42,11 +46,16 @@ let decoder = {
         }
         return date_
     }
+#if os(Linux)
+    return decoder.cx
+#else
     return decoder
+#endif
 }()
 
 public class LemmyApi {
     public var apiUrl: URL
+    private var apiUrlComponents: URLComponents
     public var baseUrl: String
     private var cancellable: Set<AnyCancellable> = Set()
     public var jwt: String?
@@ -67,6 +76,7 @@ public class LemmyApi {
             throw LemmyError.invalidUrl
         }
         self.apiUrl = apiUrl
+        self.apiUrlComponents = URLComponents(url: apiUrl, resolvingAgainstBaseURL: false)!
     }
     
     public func setJwt(jwt: String?) {
@@ -74,93 +84,99 @@ public class LemmyApi {
     }
     
     public func makeRequestWithBody<ResponseType: Decodable, BodyType: Encodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, body: BodyType, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable where BodyType: WithMethod {
-        var url = apiUrl.appending(path: path).appending(queryItems: query)
+        var newUrlComponents = apiUrlComponents
+        newUrlComponents.path.append(path)
+        newUrlComponents.queryItems? = query
 #if canImport(OSLog)
-        os_log("url %{public}s", url.absoluteString)
+        os_log("url %{public}s", newUrlComponents.string!)
 #else
-        print(url.absoluteString)
+        print(newUrlComponents.string!)
 #endif
-        if jwt != nil {
-            url = url.appending(queryItems: [URLQueryItem(name: "auth", value: jwt!)])
+        if let jwt = jwt {
+            newUrlComponents.queryItems!.append(URLQueryItem(name: "auth", value: jwt))
         }
-        var request = URLRequest(url: url)
+        var request = URLRequest(url: newUrlComponents.url!)
         request.setValue("ios:com.axlav.lemmios:v1.0.0 (by @mrlavallee@lemmy.world)", forHTTPHeaderField: "User-Agent")
         request.httpMethod = body.method
         if !(body is NoBody) {
             request.httpBody = try! encoder.encode(body)
             request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         }
-        return URLSession.shared.dataTaskPublisher(for: request)
-            // #1 URLRequest fails, throw APIError.network
-            .mapError { error in
-                let networkError = NetworkError.network(code: error.code.rawValue, description: error.localizedDescription)
-#if canImport(OSLog)
-                os_log("\(networkError)")
+#if canImport(FoundationNetworking)
+        let session = URLSession(configuration: URLSessionConfiguration.default).cx
 #else
-                print(networkError)
+        let session = URLSession.shared
 #endif
-                return networkError
-            }
-            .tryMap { v in
-                let code = (v.response as! HTTPURLResponse).statusCode
-                if code != 200 {
+        // #1 URLRequest fails, throw APIError.network
+        return session.dataTaskPublisher(for: request).mapError { error in
+            let networkError = NetworkError.network(code: error.code.rawValue, description: error.localizedDescription)
 #if canImport(OSLog)
-                    os_log("body %{public}s", String(data: v.data, encoding: .utf8) ?? "")
+            os_log("\(networkError)")
 #else
-                    print(String(v.data, encoding: .utf8) ?? "")
+            print(networkError)
 #endif
-                    if let decoded = try? decoder.decode(ErrorData.self, from: v.data) {
-                        throw NetworkError.lemmyError(message: decoded.error, code: code)
-                    }
-                    throw NetworkError.network(code: code, description: String(data: v.data, encoding: .utf8) ?? "")
+            return networkError
+        }
+        .tryMap { v in
+            let code = (v.response as! HTTPURLResponse).statusCode
+            if code != 200 {
+#if canImport(OSLog)
+                os_log("body %{public}s", String(data: v.data, encoding: .utf8) ?? "")
+#else
+                print(String(data: v.data, encoding: .utf8) ?? "")
+#endif
+                if let decoded = try? decoder.decode(ErrorData.self, from: v.data) {
+                    throw NetworkError.lemmyError(message: decoded.error, code: code)
                 }
-                return v
+                throw NetworkError.network(code: code, description: String(data: v.data, encoding: .utf8) ?? "")
             }
-            .retryWithDelay(retries: 10, delay: 5, scheduler: DispatchQueue.global())
-            .flatMap { v in
-                Just(v.data)
+            return v
+        }
+        .retryWithDelay(retries: 10, delay: 5, scheduler: DispatchQueue.global().cx)
+        .flatMap { v in
+            Just(v.data)
                 
-                    // #2 try to decode data as a `Response`
-                    .decode(type: ResponseType.self, decoder: decoder)
+                // #2 try to decode data as a `Response`
+                .decode(type: ResponseType.self, decoder: decoder)
                 
-                    .mapError { error in
-                        let decodingError = NetworkError.decoding(
-                            message: String(data: v.data, encoding: .utf8) ?? "",
-                            error: error as! DecodingError
-                        )
+                .mapError { error in
+                    let decodingError = NetworkError.decoding(
+                        message: String(data: v.data, encoding: .utf8) ?? "",
+                        error: error as! DecodingError
+                    )
 #if canImport(OSLog)
-                        os_log("\(error)")
+                    os_log("\(error)")
 #else
-                        print(error)
+                    print(error)
 #endif
-                        return decodingError
-                    }
-                    // #3 if decoding fails,
-                    .tryCatch { decodingError in
-                        Just(v.data)
-                            // #3.1 ... decode as an `ErrorResponse`
-                            .decode(type: ErrorData.self, decoder: decoder)
+                    return decodingError
+                }
+                // #3 if decoding fails,
+                .tryCatch { decodingError in
+                    Just(v.data)
+                        // #3.1 ... decode as an `ErrorResponse`
+                        .decode(type: ErrorData.self, decoder: decoder)
                                     
-                            // #4 if both fail, throw APIError.decoding
-                            .mapError { _ in decodingError }
+                        // #4 if both fail, throw APIError.decoding
+                        .mapError { _ in decodingError }
                                     
-                            // #3.2 ... and throw `APIError.api
-                            .tryMap { throw NetworkError.lemmyError(message: $0.error, code: 200) }
-                    }
-            }
-            .mapError { $0 as! LemmyApi.NetworkError }
-            .receive(on: DispatchQueue.main)
-            .sink(receiveCompletion: { completion in
-                switch completion {
-                case .finished:
+                        // #3.2 ... and throw `APIError.api
+                        .tryMap { throw NetworkError.lemmyError(message: $0.error, code: 200) }
+                }
+        }
+        .mapError { $0 as! LemmyApi.NetworkError }
+        .receive(on: DispatchQueue.main.cx)
+        .sink(receiveCompletion: { completion in
+            switch completion {
+            case .finished:
 //                    print("completed")
-                    break
-                case let .failure(error):
-                    receiveValue(nil, error)
-                }
-            }, receiveValue: { value in
-                receiveValue(value, nil)
-            })
+                break
+            case let .failure(error):
+                receiveValue(nil, error)
+            }
+        }, receiveValue: { value in
+            receiveValue(value, nil)
+        })
     }
     
     private struct NoBody: Encodable, WithMethod {

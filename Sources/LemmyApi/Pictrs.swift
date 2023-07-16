@@ -1,8 +1,5 @@
+#if !os(Linux)
 import Foundation
-import Foundation
-#if canImport(FoundationNetworking)
-import FoundationNetworking
-#endif
 
 public extension LemmyApi {
     func deletePhoto(data: File) {
@@ -74,3 +71,4 @@ extension NSMutableData {
         }
     }
 }
+#endif

@@ -1,5 +1,9 @@
 import Foundation
-import CXShim
+#if canImport(Combine)
+import Combine
+#else
+import CombineX
+#endif
 
 public extension LemmyApi {
     func resolveObject<T: ResolveResponse>(ap_id: URL, receiveValue: @escaping (T?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {

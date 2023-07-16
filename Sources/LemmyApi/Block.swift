@@ -1,5 +1,9 @@
 import Foundation
+#if canImport(Combine)
 import CXShim
+#else
+import CombineX
+#endif
 
 public extension LemmyApi {
     func blockCommunity(id: Int, block: Bool, receiveValue: @escaping (LemmyApi.CommunityView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {

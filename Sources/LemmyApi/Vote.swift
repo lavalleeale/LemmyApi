@@ -1,5 +1,9 @@
 import CXShim
-import Foundation
+#if canImport(Combine)
+import Combine
+#else
+import CombineX
+#endif
 
 public extension LemmyApi {
     func voteComment(id: Int, target: Int, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {

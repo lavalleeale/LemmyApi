@@ -1,4 +1,8 @@
+#if canImport(Combine)
 import CXShim
+#else
+import CombineX
+#endif
 import Foundation
 
 public extension LemmyApi {
