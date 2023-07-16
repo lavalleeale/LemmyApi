@@ -1,6 +1,8 @@
 import CXShim
 import Foundation
+#if canImport(OSLog)
 import OSLog
+#endif
 
 let VERSION = "v3"
 
@@ -69,7 +71,11 @@ public class LemmyApi {
     
     public func makeRequestWithBody<ResponseType: Decodable, BodyType: Encodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, body: BodyType, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable where BodyType: WithMethod {
         var url = apiUrl.appending(path: path).appending(queryItems: query)
+#if canImport(OSLog)
         os_log("url %{public}s", url.absoluteString)
+#else
+        print(url.absoluteString)
+#endif
         if jwt != nil {
             url = url.appending(queryItems: [URLQueryItem(name: "auth", value: jwt!)])
         }
@@ -84,13 +90,21 @@ public class LemmyApi {
             // #1 URLRequest fails, throw APIError.network
             .mapError { error in
                 let networkError = NetworkError.network(code: error.code.rawValue, description: error.localizedDescription)
+#if canImport(OSLog)
                 os_log("\(networkError)")
+#else
+                print(networkError)
+#endif
                 return networkError
             }
             .tryMap { v in
                 let code = (v.response as! HTTPURLResponse).statusCode
                 if code != 200 {
+#if canImport(OSLog)
                     os_log("body %{public}s", String(data: v.data, encoding: .utf8) ?? "")
+#else
+                    print(String(v.data, encoding: .utf8) ?? "")
+#endif
                     if let decoded = try? decoder.decode(ErrorData.self, from: v.data) {
                         throw NetworkError.lemmyError(message: decoded.error, code: code)
                     }
@@ -110,7 +124,11 @@ public class LemmyApi {
                             message: String(data: v.data, encoding: .utf8) ?? "",
                             error: error as! DecodingError
                         )
+#if canImport(OSLog)
                         os_log("\(error)")
+#else
+                        print(error)
+#endif
                         return decodingError
                     }
                     // #3 if decoding fails,
