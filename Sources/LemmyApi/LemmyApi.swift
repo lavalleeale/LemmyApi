@@ -91,6 +91,9 @@ public class LemmyApi {
                 let code = (v.response as! HTTPURLResponse).statusCode
                 if code != 200 {
                     os_log("body %{public}s", String(data: v.data, encoding: .utf8) ?? "")
+                    if let decoded = try? decoder.decode(ErrorData.self, from: v.data) {
+                        throw NetworkError.lemmyError(message: decoded.error)
+                    }
                     throw NetworkError.network(code: code, description: String(data: v.data, encoding: .utf8) ?? "")
                 }
                 return v
