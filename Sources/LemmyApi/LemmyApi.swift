@@ -3,6 +3,10 @@ import Foundation
 #if canImport(OSLog)
 import OSLog
 #endif
+import Foundation
+#if canImport(FoundationNetworking)
+import FoundationNetworking
+#endif
 
 let VERSION = "v3"
 
