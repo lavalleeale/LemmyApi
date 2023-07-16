@@ -85,8 +85,8 @@ public class LemmyApi {
     
     public func makeRequestWithBody<ResponseType: Decodable, BodyType: Encodable>(path: String, query: [URLQueryItem] = [], responseType: ResponseType.Type, body: BodyType, receiveValue: @escaping (ResponseType?, NetworkError?) -> Void) -> AnyCancellable where BodyType: WithMethod {
         var newUrlComponents = apiUrlComponents
-        newUrlComponents.path.append(path)
-        newUrlComponents.queryItems? = query
+        newUrlComponents.path.append("/\(path)")
+        newUrlComponents.queryItems = query
 #if canImport(OSLog)
         os_log("url %{public}s", newUrlComponents.string!)
 #else
