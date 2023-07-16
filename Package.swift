@@ -13,15 +13,18 @@ let package = Package(
             targets: ["LemmyApi"]),
     ],
     dependencies: [
-        // Dependencies declare other packages that this package depends on.
-        // .package(url: /* package url */, from: "1.0.0"),
+        .package(url: "https://github.com/cx-org/CXShim", .upToNextMinor(from: "0.4.0")),
+        .package(url: "https://github.com/cx-org/CombineX", from: "0.4.0"),
     ],
     targets: [
         // Targets are the basic building blocks of a package. A target can define a module or a test suite.
         // Targets can depend on other targets in this package, and on products in packages this package depends on.
         .target(
             name: "LemmyApi",
-            dependencies: [],
+            dependencies: [
+                .product(name: "CXShim", package: "CXShim"),
+                .product(name: "CombineX", package: "CombineX"),
+            ],
             swiftSettings: [.enableUpcomingFeature("BareSlashRegexLiterals")]),
     ]
 )

@@ -1,4 +1,4 @@
-import Combine
+import CXShim
 import Foundation
 import OSLog
 
@@ -329,7 +329,11 @@ public class LemmyApi {
         public let posts: [ApiPost]?
     }
     
-    public struct ApiUser: Codable, Identifiable {
+    public struct ApiUser: Codable, Identifiable, Equatable {
+        public static func == (lhs: LemmyApi.ApiUser, rhs: LemmyApi.ApiUser) -> Bool {
+            lhs.id == rhs.id
+        }
+        
         public var id: Int {
             person.id
         }
@@ -411,7 +415,11 @@ public class LemmyApi {
         }
     }
     
-    public struct ApiCommunity: Codable, Identifiable {
+    public struct ApiCommunity: Codable, Identifiable, Equatable {
+        public static func == (lhs: LemmyApi.ApiCommunity, rhs: LemmyApi.ApiCommunity) -> Bool {
+            lhs.id == rhs.id
+        }
+        
         public var id: Int { community.id }
         public let community: ApiCommunityData
         public let subscribed: String

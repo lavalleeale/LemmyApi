@@ -1,6 +1,6 @@
 import Foundation
 
-import Combine
+import CXShim
 import Foundation
 
 public extension LemmyApi {

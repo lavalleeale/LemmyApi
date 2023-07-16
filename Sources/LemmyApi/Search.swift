@@ -1,5 +1,5 @@
 import Foundation
-import Combine
+import CXShim
 
 public extension LemmyApi {
     func searchCommunities(query: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiCommunities?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {

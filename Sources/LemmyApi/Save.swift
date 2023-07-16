@@ -1,5 +1,5 @@
 import Foundation
-import Combine
+import CXShim
 
 public extension LemmyApi {
     func savePost(save: Bool, post_id: Int, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
