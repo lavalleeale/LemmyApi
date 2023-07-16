@@ -89,8 +89,6 @@ public class LemmyApi {
         newUrlComponents.queryItems = query
 #if canImport(OSLog)
         os_log("url %{public}s", newUrlComponents.string!)
-#else
-        print(newUrlComponents.string!)
 #endif
         if let jwt = jwt {
             newUrlComponents.queryItems!.append(URLQueryItem(name: "auth", value: jwt))
@@ -112,8 +110,6 @@ public class LemmyApi {
             let networkError = NetworkError.network(code: error.code.rawValue, description: error.localizedDescription)
 #if canImport(OSLog)
             os_log("\(networkError)")
-#else
-            print(networkError)
 #endif
             return networkError
         }
@@ -122,8 +118,6 @@ public class LemmyApi {
             if code != 200 {
 #if canImport(OSLog)
                 os_log("body %{public}s", String(data: v.data, encoding: .utf8) ?? "")
-#else
-                print(String(data: v.data, encoding: .utf8) ?? "")
 #endif
                 if let decoded = try? decoder.decode(ErrorData.self, from: v.data) {
                     throw NetworkError.lemmyError(message: decoded.error, code: code)
@@ -146,8 +140,6 @@ public class LemmyApi {
                     )
 #if canImport(OSLog)
                     os_log("\(error)")
-#else
-                    print(error)
 #endif
                     return decodingError
                 }
