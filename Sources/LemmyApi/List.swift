@@ -2,14 +2,14 @@ import Combine
 import Foundation
 
 public extension LemmyApi {
-    func getPosts(path: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    func getPosts(path: String, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
             sortString += time.rawValue
         }
-        var query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page", value: String(page))]
+        var query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "limit", value: String(limit))]
         if path == "Subscribed" {
-            if self.jwt != nil {
+            if jwt != nil {
                 query.append(URLQueryItem(name: "type_", value: "Subscribed"))
             }
         } else if path == "All" {
@@ -20,12 +20,12 @@ public extension LemmyApi {
         return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
     }
     
-    func getPosts(id: Int, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    func getPosts(id: Int, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
             sortString += time.rawValue
         }
-        let query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "community_id", value: String(id))]
+        let query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "community_id", value: String(id)), URLQueryItem(name: "limit", value: String(limit))]
         return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
     }
 
@@ -84,6 +84,7 @@ public extension LemmyApi {
         public var id: Int {
             private_message.id
         }
+
         public let creator: ApiUserData
         public var private_message: MessageContent
     }
