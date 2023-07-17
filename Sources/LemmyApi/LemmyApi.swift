@@ -402,6 +402,8 @@ public class LemmyApi {
         public let path: String
         public let ap_id: URL
         public let local: Bool
+        public let deleted: Bool
+        public let removed: Bool
     }
     
     public struct ApiPost: Codable, Identifiable, Hashable, WithCounts {
@@ -483,6 +485,8 @@ public class LemmyApi {
         public let local: Bool
         public let featured_community: Bool
         public let featured_local: Bool
+        public let deleted: Bool
+        public let removed: Bool
     }
     
     public struct ApiPostCounts: Codable, WithPublished {
