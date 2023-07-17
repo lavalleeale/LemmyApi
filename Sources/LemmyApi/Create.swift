@@ -7,9 +7,7 @@ import Foundation
 
 public extension LemmyApi {
     func createPost(title: String, content: String, url: String, communityId: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
-        var body: SentPost {
-            return SentPost(auth: self.jwt!, community_id: communityId, name: title, url: url == "" ? nil : url, body: content)
-        }
+        let body = SentPost(auth: self.jwt!, community_id: communityId, name: title, url: url == "" ? nil : url, body: content)
         return makeRequestWithBody(path: "post", responseType: PostView.self, body: body, receiveValue: receiveValue)
     }
     
@@ -19,6 +17,20 @@ public extension LemmyApi {
     
     func editComment(content: String, commentId: Int, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
         return makeRequestWithBody(path: "comment", responseType: CommentView.self, body: EditedComment(auth: jwt!, content: content, comment_id: commentId), receiveValue: receiveValue)
+    }
+    
+    func editPost(title: String, content: String, url: String, postId: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
+        let body = EditedPost(post_id: postId, auth: self.jwt!, name: title, url: url == "" ? nil : url, body: content)
+        return makeRequestWithBody(path: "post", responseType: PostView.self, body: body, receiveValue: receiveValue)
+    }
+    
+    struct EditedPost: Codable, WithMethod {
+        public let method = "PUT"
+        public let post_id: Int
+        public let auth: String
+        public let name: String
+        public let url: String?
+        public let body: String?
     }
     
     struct SentPost: Codable, WithMethod {
