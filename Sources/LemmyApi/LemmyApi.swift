@@ -345,13 +345,21 @@ public class LemmyApi {
         case decoding(message: String, error: DecodingError)
     }
     
-    public struct CommentView: Codable {
+    public struct CommentView: Codable, withWrapped {
         public let comment_view: ApiComment
+        
+        public var body: ApiComment {
+            comment_view
+        }
     }
     
-    public struct PersonView: Codable, Identifiable {
+    public struct PersonView: Codable, Identifiable, withWrapped {
         public var id: Int {
             person_view.person.id
+        }
+        
+        public var body: ApiUser {
+            person_view
         }
         
         public let person_view: ApiUser
@@ -372,12 +380,19 @@ public class LemmyApi {
         public let counts: ApiUserCounts
     }
     
-    public struct CommunityView: Codable {
+    public struct CommunityView: Codable, withWrapped {
         public let community_view: ApiCommunity
+        
+        public var body: ApiCommunity {
+            community_view
+        }
     }
     
-    public struct PostView: Codable {
+    public struct PostView: Codable, withWrapped {
         public let post_view: ApiPost
+        public var body: ApiPost {
+            post_view
+        }
     }
     
     public struct ApiComment: Codable, Identifiable, Equatable, WithCounts {
