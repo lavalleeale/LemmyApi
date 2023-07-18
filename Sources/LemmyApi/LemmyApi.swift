@@ -406,6 +406,7 @@ public class LemmyApi {
         public let creator: ApiUserData
         public let post: ApiPostData
         public let counts: ApiCommentCounts
+        public let community: ApiCommunityData
         public let my_vote: Int?
         public let saved: Bool?
         public var comment_reply: ReplyInfo?
