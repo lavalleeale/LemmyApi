@@ -38,7 +38,7 @@ public extension LemmyApi {
         }
     }
 
-    struct CommetResolveResponse: ResolveResponse {
+    struct CommentResolveResponse: ResolveResponse {
         public typealias returnResponse = CommentView
         public let comment: ApiComment
         
