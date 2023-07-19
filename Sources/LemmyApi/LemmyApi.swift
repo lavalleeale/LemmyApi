@@ -67,11 +67,15 @@ public class LemmyApi {
 
     public init(baseUrl: String) throws {
         var baseUrl = baseUrl
-        let regex = /https?:\/\//
-        if !baseUrl.contains(regex) {
+        let regex = "https?://"
+        if baseUrl.range(of: regex) == nil {
             baseUrl = "https://" + baseUrl
         }
-        self.baseUrl = baseUrl.lowercased().replacing("/+$", with: "")
+        if baseUrl.last == "/" {
+            self.baseUrl = String(baseUrl.lowercased().dropLast())
+        } else {
+            self.baseUrl = baseUrl.lowercased()
+        }
         guard let apiUrl = URL(string: "\(self.baseUrl)/api/\(VERSION)") else {
             throw LemmyError.invalidUrl
         }
