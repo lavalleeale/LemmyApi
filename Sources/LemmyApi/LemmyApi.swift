@@ -68,7 +68,7 @@ public class LemmyApi {
     public init(baseUrl: String) throws {
         var baseUrl = baseUrl
         let regex = "https?://"
-        if baseUrl.range(of: regex) == nil {
+        if baseUrl.range(of: regex, options: .regularExpression) == nil {
             baseUrl = "https://" + baseUrl
         }
         if baseUrl.last == "/" {

@@ -75,6 +75,6 @@ public protocol ResolveResponse: Decodable, Equatable {
 }
 
 public protocol withWrapped {
-    associatedtype bodyType: Equatable
+    associatedtype bodyType: Equatable, Codable
     var body: bodyType { get }
 }
