@@ -80,7 +80,10 @@ public class LemmyApi {
             throw LemmyError.invalidUrl
         }
         self.apiUrl = apiUrl
-        self.apiUrlComponents = URLComponents(url: apiUrl, resolvingAgainstBaseURL: false)!
+        guard let components = URLComponents(url: apiUrl, resolvingAgainstBaseURL: false) else {
+            throw LemmyError.invalidUrl
+        }
+        self.apiUrlComponents = components
     }
     
     public func setJwt(jwt: String?) {

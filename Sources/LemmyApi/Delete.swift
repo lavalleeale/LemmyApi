@@ -14,6 +14,25 @@ public extension LemmyApi {
         return makeRequestWithBody(path: "post/delete", responseType: PostView.self, body: DeletePostPayload(auth: jwt!, post_id: id, deleted: deleted), receiveValue: receiveValue)
     }
     
+    func deleteAccount(password: String, receiveValue: @escaping (LemmyApi.DeleteAccountResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "user/delete_account", responseType: DeleteAccountResponse.self, body:DeleteAccountPayload(password: password, auth: jwt!), receiveValue: receiveValue)
+    }
+    
+    struct DeleteAccountPayload: WithMethod, Codable {
+        public init(password: String, auth: String) {
+            self.password = password
+            self.auth = auth
+        }
+        
+        public let method = "POST"
+        public let password: String
+        public let auth: String
+    }
+    
+    struct DeleteAccountResponse: Codable {
+        
+    }
+    
     struct DeleteCommentPayload: WithMethod, Codable {
         public init(auth: String, comment_id: Int, deleted: Bool) {
             self.auth = auth
