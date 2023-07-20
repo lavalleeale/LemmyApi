@@ -61,7 +61,6 @@ public class LemmyApi {
     public var jwt: String?
     private var encoder = JSONEncoder()
     public var retries = 3
-    public var delay = 2
     
     public enum LemmyError: Swift.Error {
         case invalidUrl
@@ -135,7 +134,7 @@ public class LemmyApi {
             }
             return v
         }
-        .retryWithDelay(retries: retries, delay: delay, scheduler: DispatchQueue.global().cx)
+        .retryWithDelay(retries: retries, delay: 2, scheduler: DispatchQueue.global().cx)
         .flatMap { v in
             Just(v.data)
                 
