@@ -250,6 +250,17 @@ public class LemmyApi {
         return makeRequestWithBody(path: "private_message", responseType: PrivateMessageView.self, body: MessagePayload(auth: jwt!, content: content, recipient_id: to), receiveValue: receiveValue)
     }
     
+    public func distinguish(commentId: Int, distinguished: Bool, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment/distinguish", responseType: CommentView.self, body: DistinguishPayload(comment_id: commentId, distinguished: distinguished, auth: jwt!), receiveValue: receiveValue)
+    }
+    
+    public struct DistinguishPayload: Codable, WithMethod {
+        public let method = "POST"
+        public let comment_id: Int
+        public let distinguished: Bool
+        public let auth: String
+    }
+    
     public struct ErrorData: Codable {
         public let error: String
     }
@@ -353,21 +364,13 @@ public class LemmyApi {
         case decoding(message: String, error: DecodingError)
     }
     
-    public struct CommentView: Codable, withWrapped {
+    public struct CommentView: Codable, Equatable {
         public let comment_view: ApiComment
-        
-        public var body: ApiComment {
-            comment_view
-        }
     }
     
-    public struct PersonView: Codable, Identifiable, withWrapped {
+    public struct PersonView: Codable, Identifiable {
         public var id: Int {
             person_view.person.id
-        }
-        
-        public var body: ApiUser {
-            person_view
         }
         
         public let person_view: ApiUser
@@ -388,19 +391,17 @@ public class LemmyApi {
         public let counts: ApiUserCounts
     }
     
-    public struct CommunityView: Codable, withWrapped {
+    public struct CommunityView: Codable {
         public let community_view: ApiCommunity
-        
-        public var body: ApiCommunity {
-            community_view
-        }
     }
     
-    public struct PostView: Codable, withWrapped {
-        public let post_view: ApiPost
-        public var body: ApiPost {
-            post_view
+    public struct PostView: Codable, Equatable {
+        public static func == (lhs: LemmyApi.PostView, rhs: LemmyApi.PostView) -> Bool {
+            lhs.post_view.id == rhs.post_view.id
         }
+        
+        public let post_view: ApiPost
+        public let moderators: [CommunityWithInfo]?
     }
     
     public struct ApiComment: Codable, Identifiable, Equatable, WithCounts {
@@ -428,6 +429,7 @@ public class LemmyApi {
         public let local: Bool
         public let deleted: Bool
         public let removed: Bool
+        public let distinguished: Bool
     }
     
     public struct ApiPost: Codable, Identifiable, Hashable, WithCounts {
@@ -463,7 +465,7 @@ public class LemmyApi {
         public let id: Int
         public let actor_id: URL
         public let published: Date
-        public let avatar: URL?
+        public var avatar: URL?
         public let local: Bool
         
         public var icon: URL? {
@@ -491,7 +493,7 @@ public class LemmyApi {
     public struct ApiCommunityData: Codable, Identifiable, WithNameHost {
         public let id: Int
         public let name: String
-        public let icon: URL?
+        public var icon: URL?
         public let actor_id: URL
         public let local: Bool
     }
@@ -501,8 +503,8 @@ public class LemmyApi {
         public let name: String
         
         public let body: String?
-        public let thumbnail_url: URL?
-        public let url: URL?
+        public var thumbnail_url: URL?
+        private var url: String?
         public let creator_id: Int
         public let nsfw: Bool
         public let ap_id: URL
@@ -511,6 +513,14 @@ public class LemmyApi {
         public let featured_local: Bool
         public let deleted: Bool
         public let removed: Bool
+        
+        public var UrlData: URL? {
+            if let url = url {
+                return URL(string: url)
+            } else {
+                return nil
+            }
+        }
     }
     
     public struct ApiPostCounts: Codable, WithPublished {
@@ -547,11 +557,13 @@ public class LemmyApi {
     }
     
     public struct MyUser: Codable {
-        public let follows: [Follower]
+        public let follows: [CommunityWithInfo]
+        public let moderates: [CommunityWithInfo]
         public let local_user_view: ApiUser
+        
     }
     
-    public struct Follower: Codable {
+    public struct CommunityWithInfo: Codable {
         public let community: ApiCommunityData
     }
     
