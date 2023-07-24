@@ -389,6 +389,11 @@ public class LemmyApi {
 
         public let person: ApiUserData
         public let counts: ApiUserCounts
+        public let local_user: LocalUser?
+    }
+    
+    public struct LocalUser: Codable {
+        public let show_nsfw: Bool
     }
     
     public struct CommunityView: Codable {
@@ -559,8 +564,7 @@ public class LemmyApi {
     public struct MyUser: Codable {
         public let follows: [CommunityWithInfo]
         public let moderates: [CommunityWithInfo]
-        public let local_user_view: ApiUser
-        
+        public let local_user_view: ApiUser?
     }
     
     public struct CommunityWithInfo: Codable {
