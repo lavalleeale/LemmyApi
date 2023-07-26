@@ -438,13 +438,14 @@ public class LemmyApi {
     }
     
     public struct ApiPost: Codable, Identifiable, Hashable, WithCounts {
-        public init(post: LemmyApi.ApiPostData, creator: LemmyApi.ApiUserData, community: LemmyApi.ApiCommunityData, counts: LemmyApi.ApiPostCounts, my_vote: Int? = nil, saved: Bool? = nil) {
+        public init(post: LemmyApi.ApiPostData, creator: LemmyApi.ApiUserData, community: LemmyApi.ApiCommunityData, counts: LemmyApi.ApiPostCounts, my_vote: Int? = nil, saved: Bool? = nil, creator_banned_from_community: Bool? = nil) {
             self.post = post
             self.creator = creator
             self.community = community
             self.counts = counts
             self.my_vote = my_vote
             self.saved = saved
+            self.creator_banned_from_community = creator_banned_from_community
         }
         
         public static func == (lhs: LemmyApi.ApiPost, rhs: LemmyApi.ApiPost) -> Bool {
@@ -463,6 +464,7 @@ public class LemmyApi {
         public let counts: ApiPostCounts
         public let my_vote: Int?
         public let saved: Bool?
+        public let creator_banned_from_community: Bool?
     }
     
     public struct ApiUserData: Codable, WithPublished, WithNameHost, Identifiable {

@@ -23,7 +23,22 @@ public extension LemmyApi {
     }
     
     func deleteAccount(password: String, receiveValue: @escaping (LemmyApi.DeleteAccountResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "user/delete_account", responseType: DeleteAccountResponse.self, body:DeleteAccountPayload(password: password, auth: jwt!), receiveValue: receiveValue)
+        return makeRequestWithBody(path: "user/delete_account", responseType: DeleteAccountResponse.self, body: DeleteAccountPayload(password: password, auth: jwt!), receiveValue: receiveValue)
+    }
+    
+    func banUser(userId: Int, communityId: Int, ban: Bool, reason: String, remove: Bool, expires: Int?, receiveValue: @escaping (LemmyApi.PersonView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "community/ban_user", responseType: PersonView.self, body: BanUserPayload(auth: jwt!, ban: ban, community_id: communityId, person_id: userId, reason: reason, remove_data: remove, expires: expires), receiveValue: receiveValue)
+    }
+
+    struct BanUserPayload: WithMethod, Codable {
+        public let method = "POST"
+        let auth: String
+        let ban: Bool
+        let community_id: Int
+        let person_id: Int
+        let reason: String
+        let remove_data: Bool
+        let expires: Int?
     }
     
     struct DeleteAccountPayload: WithMethod, Codable {
@@ -37,9 +52,7 @@ public extension LemmyApi {
         public let auth: String
     }
     
-    struct DeleteAccountResponse: Codable {
-        
-    }
+    struct DeleteAccountResponse: Codable {}
     
     struct DeleteCommentPayload: WithMethod, Codable {
         public init(auth: String, comment_id: Int, deleted: Bool) {
