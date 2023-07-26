@@ -424,6 +424,7 @@ public class LemmyApi {
         public let my_vote: Int?
         public let saved: Bool?
         public var comment_reply: ReplyInfo?
+        public var creator_banned_from_community: Bool?
     }
     
     public struct ApiCommentData: Codable {
