@@ -6,20 +6,20 @@ import CombineX
 #endif
 
 public extension LemmyApi {
-    func deleteComment(id: Int, deleted: Bool, receiveValue: @escaping (LemmyApi.CommentView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment/delete", responseType: CommentView.self, body: DeleteCommentPayload(auth: jwt!, comment_id: id, deleted: deleted), receiveValue: receiveValue)
+    func deleteComment(id: Int, deleted: Bool, receiveValue: @escaping (LemmyApi.CommentResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment/delete", responseType: CommentResponse.self, body: DeleteCommentPayload(auth: jwt!, comment_id: id, deleted: deleted), receiveValue: receiveValue)
     }
     
-    func removeComment(id: Int, removed: Bool, receiveValue: @escaping (LemmyApi.CommentView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment/remove", responseType: CommentView.self, body: RemoveCommentPayload(auth: jwt!, comment_id: id, removed: removed), receiveValue: receiveValue)
+    func removeComment(id: Int, removed: Bool, receiveValue: @escaping (LemmyApi.CommentResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment/remove", responseType: CommentResponse.self, body: RemoveCommentPayload(auth: jwt!, comment_id: id, removed: removed), receiveValue: receiveValue)
     }
     
-    func deletePost(id: Int, deleted: Bool, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "post/delete", responseType: PostView.self, body: DeletePostPayload(auth: jwt!, post_id: id, deleted: deleted), receiveValue: receiveValue)
+    func deletePost(id: Int, deleted: Bool, receiveValue: @escaping (LemmyApi.GetPostResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "post/delete", responseType: GetPostResponse.self, body: DeletePostPayload(auth: jwt!, post_id: id, deleted: deleted), receiveValue: receiveValue)
     }
     
-    func removePost(id: Int, removed: Bool, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "post/remove", responseType: PostView.self, body: RemovePostPayload(auth: jwt!, post_id: id, removed: removed), receiveValue: receiveValue)
+    func removePost(id: Int, removed: Bool, receiveValue: @escaping (LemmyApi.GetPostResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "post/remove", responseType: GetPostResponse.self, body: RemovePostPayload(auth: jwt!, post_id: id, removed: removed), receiveValue: receiveValue)
     }
     
     func deleteAccount(password: String, receiveValue: @escaping (LemmyApi.DeleteAccountResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {

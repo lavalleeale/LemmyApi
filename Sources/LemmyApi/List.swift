@@ -65,11 +65,11 @@ public extension LemmyApi {
     }
 
     struct ApiComments: Codable {
-        public let comments: [ApiComment]
+        public let comments: [CommentView]
     }
     
     struct ApiPosts: Codable {
-        public let posts: [ApiPost]
+        public let posts: [PostView]
     }
     
     struct ApiCommunities: Codable {
@@ -89,7 +89,7 @@ public extension LemmyApi {
             private_message.id
         }
 
-        public let creator: ApiUserData
+        public let creator: Person
         public var private_message: MessageContent
     }
     

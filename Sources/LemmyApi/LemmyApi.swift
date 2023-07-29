@@ -199,14 +199,14 @@ public class LemmyApi {
         return makeRequest(path: "user", query: query, responseType: PersonView.self, receiveValue: receiveValue)
     }
     
-    public func getPost(id: Int, receiveValue: @escaping (LemmyApi.PostView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getPost(id: Int, receiveValue: @escaping (LemmyApi.GetPostResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "id", value: String(id))]
-        return makeRequest(path: "post", query: query, responseType: PostView.self, receiveValue: receiveValue)
+        return makeRequest(path: "post", query: query, responseType: GetPostResponse.self, receiveValue: receiveValue)
     }
     
-    public func getComment(id: Int, receiveValue: @escaping (LemmyApi.CommentView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+    public func getComment(id: Int, receiveValue: @escaping (LemmyApi.CommentResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         let query = [URLQueryItem(name: "id", value: String(id))]
-        return makeRequest(path: "comment", query: query, responseType: CommentView.self, receiveValue: receiveValue)
+        return makeRequest(path: "comment", query: query, responseType: CommentResponse.self, receiveValue: receiveValue)
     }
     
     public func getCommunity(name: String, receiveValue: @escaping (LemmyApi.CommunityView?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
@@ -238,8 +238,8 @@ public class LemmyApi {
         return makeRequest(path: "user/get_captcha", responseType: CaptchaResponse.self, receiveValue: receiveValue)
     }
     
-    public func readReply(replyId: Int, read: Bool, receiveValue: @escaping (CommentReplyView?, NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment/mark_as_read", responseType: CommentReplyView.self, body: ReadPayload(auth: jwt!, comment_reply_id: replyId, private_message_id: nil, read: read), receiveValue: receiveValue)
+    public func readReply(replyId: Int, read: Bool, receiveValue: @escaping (CommentReplyResponse?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment/mark_as_read", responseType: CommentReplyResponse.self, body: ReadPayload(auth: jwt!, comment_reply_id: replyId, private_message_id: nil, read: read), receiveValue: receiveValue)
     }
     
     public func readMessage(messageId: Int, read: Bool, receiveValue: @escaping (PrivateMessageView?, NetworkError?) -> Void) -> AnyCancellable {
@@ -250,8 +250,8 @@ public class LemmyApi {
         return makeRequestWithBody(path: "private_message", responseType: PrivateMessageView.self, body: MessagePayload(auth: jwt!, content: content, recipient_id: to), receiveValue: receiveValue)
     }
     
-    public func distinguish(commentId: Int, distinguished: Bool, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment/distinguish", responseType: CommentView.self, body: DistinguishPayload(comment_id: commentId, distinguished: distinguished, auth: jwt!), receiveValue: receiveValue)
+    public func distinguish(commentId: Int, distinguished: Bool, receiveValue: @escaping (CommentResponse?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment/distinguish", responseType: CommentResponse.self, body: DistinguishPayload(comment_id: commentId, distinguished: distinguished, auth: jwt!), receiveValue: receiveValue)
     }
     
     public struct DistinguishPayload: Codable, WithMethod {
@@ -272,8 +272,8 @@ public class LemmyApi {
         public let recipient_id: Int
     }
     
-    public struct CommentReplyView: Codable {
-        public let comment_reply_view: ApiComment
+    public struct CommentReplyResponse: Codable {
+        public let comment_reply_view: CommentView
     }
     
     public struct ReadPayload: Codable, WithMethod {
@@ -285,10 +285,10 @@ public class LemmyApi {
     }
     
     public struct Replies: Codable {
-        public let replies: [ApiComment]
+        public let replies: [CommentView]
     }
     
-    public struct ReplyInfo: Codable {
+    public struct CommentReply: Codable {
         public var read: Bool
         public let id: Int
     }
@@ -364,8 +364,8 @@ public class LemmyApi {
         case decoding(message: String, error: DecodingError)
     }
     
-    public struct CommentView: Codable, Equatable {
-        public let comment_view: ApiComment
+    public struct CommentResponse: Codable, Equatable {
+        public let comment_view: CommentView
     }
     
     public struct PersonView: Codable, Identifiable {
@@ -374,8 +374,8 @@ public class LemmyApi {
         }
         
         public let person_view: ApiUser
-        public let comments: [ApiComment]?
-        public let posts: [ApiPost]?
+        public let comments: [CommentView]?
+        public let posts: [PostView]?
     }
     
     public struct ApiUser: Codable, Identifiable, Equatable {
@@ -387,8 +387,8 @@ public class LemmyApi {
             person.id
         }
 
-        public let person: ApiUserData
-        public let counts: ApiUserCounts
+        public let person: Person
+        public let counts: PersonAggregates
         public let local_user: LocalUser?
     }
     
@@ -400,34 +400,39 @@ public class LemmyApi {
         public let community_view: ApiCommunity
     }
     
-    public struct PostView: Codable, Equatable {
-        public static func == (lhs: LemmyApi.PostView, rhs: LemmyApi.PostView) -> Bool {
+    public struct GetPostResponse: Codable, Equatable {
+        public static func == (lhs: LemmyApi.GetPostResponse, rhs: LemmyApi.GetPostResponse) -> Bool {
             lhs.post_view.id == rhs.post_view.id
         }
         
-        public let post_view: ApiPost
-        public let moderators: [CommunityWithInfo]?
+        public let post_view: PostView
+        public let moderators: [CommunityModeratorView]?
     }
     
-    public struct ApiComment: Codable, Identifiable, Equatable, WithCounts {
-        public static func == (lhs: LemmyApi.ApiComment, rhs: LemmyApi.ApiComment) -> Bool {
+    public struct CommunityModeratorView: Codable {
+        public var community: Community
+        public var moderator: Person
+    }
+    
+    public struct CommentView: Codable, Identifiable, Equatable, WithCounts {
+        public static func == (lhs: LemmyApi.CommentView, rhs: LemmyApi.CommentView) -> Bool {
             lhs.id == rhs.id
         }
         
         public var id: Int { comment.id }
         
-        public let comment: ApiCommentData
-        public let creator: ApiUserData
-        public let post: ApiPostData
-        public let counts: ApiCommentCounts
-        public let community: ApiCommunityData
+        public let comment: Comment
+        public let creator: Person
+        public let post: Post
+        public let counts: CommentAggregates
+        public let community: Community
         public let my_vote: Int?
         public let saved: Bool?
-        public var comment_reply: ReplyInfo?
+        public var comment_reply: CommentReply?
         public var creator_banned_from_community: Bool?
     }
     
-    public struct ApiCommentData: Codable {
+    public struct Comment: Codable {
         public let id: Int
         public let content: String
         public let path: String
@@ -438,8 +443,8 @@ public class LemmyApi {
         public let distinguished: Bool
     }
     
-    public struct ApiPost: Codable, Identifiable, Hashable, WithCounts {
-        public init(post: LemmyApi.ApiPostData, creator: LemmyApi.ApiUserData, community: LemmyApi.ApiCommunityData, counts: LemmyApi.ApiPostCounts, my_vote: Int? = nil, saved: Bool? = nil, creator_banned_from_community: Bool? = nil) {
+    public struct PostView: Codable, Identifiable, Hashable, WithCounts {
+        public init(post: LemmyApi.Post, creator: LemmyApi.Person, community: LemmyApi.Community, counts: LemmyApi.PostAggregates, my_vote: Int? = nil, saved: Bool? = nil, creator_banned_from_community: Bool? = nil) {
             self.post = post
             self.creator = creator
             self.community = community
@@ -449,7 +454,7 @@ public class LemmyApi {
             self.creator_banned_from_community = creator_banned_from_community
         }
         
-        public static func == (lhs: LemmyApi.ApiPost, rhs: LemmyApi.ApiPost) -> Bool {
+        public static func == (lhs: LemmyApi.PostView, rhs: LemmyApi.PostView) -> Bool {
             lhs.id == rhs.id
         }
         
@@ -459,16 +464,16 @@ public class LemmyApi {
 
         public var id: Int { post.id }
         
-        public let post: ApiPostData
-        public let creator: ApiUserData
-        public let community: ApiCommunityData
-        public let counts: ApiPostCounts
+        public let post: Post
+        public let creator: Person
+        public let community: Community
+        public let counts: PostAggregates
         public let my_vote: Int?
         public let saved: Bool?
         public let creator_banned_from_community: Bool?
     }
     
-    public struct ApiUserData: Codable, WithPublished, WithNameHost, Identifiable {
+    public struct Person: Codable, WithPublished, WithNameHost, Identifiable {
         public let name: String
         public let id: Int
         public let actor_id: URL
@@ -487,7 +492,7 @@ public class LemmyApi {
         }
         
         public var id: Int { community.id }
-        public let community: ApiCommunityData
+        public let community: Community
         public let subscribed: String
         public let counts: ApiCommunityCounts
         public let blocked: Bool?
@@ -498,7 +503,7 @@ public class LemmyApi {
         public let subscribers: Int
     }
     
-    public struct ApiCommunityData: Codable, Identifiable, WithNameHost {
+    public struct Community: Codable, Identifiable, WithNameHost {
         public let id: Int
         public let name: String
         public var icon: URL?
@@ -506,7 +511,7 @@ public class LemmyApi {
         public let local: Bool
     }
     
-    public struct ApiPostData: Codable {
+    public struct Post: Codable {
         public let id: Int
         public let name: String
         
@@ -531,19 +536,19 @@ public class LemmyApi {
         }
     }
     
-    public struct ApiPostCounts: Codable, WithPublished {
+    public struct PostAggregates: Codable, WithPublished {
         public let score: Int
         public let comments: Int
         public let published: Date
     }
     
-    public struct ApiCommentCounts: Codable, WithPublished {
+    public struct CommentAggregates: Codable, WithPublished {
         public let score: Int
         public let child_count: Int
         public let published: Date
     }
     
-    public struct ApiUserCounts: Codable {
+    public struct PersonAggregates: Codable {
         public let comment_score: Int
         public let post_score: Int
         public let comment_count: Int
@@ -551,7 +556,7 @@ public class LemmyApi {
     }
     
     public struct SiteInfo: Codable {
-        public let my_user: MyUser?
+        public let my_user: MyUserInfo?
         public let site_view: SiteView
     }
     
@@ -564,14 +569,15 @@ public class LemmyApi {
         public let description: String?
     }
     
-    public struct MyUser: Codable {
-        public let follows: [CommunityWithInfo]
-        public let moderates: [CommunityWithInfo]
+    public struct MyUserInfo: Codable {
+        public let follows: [CommunityFollowerView]
+        public let moderates: [CommunityModeratorView]
         public let local_user_view: ApiUser?
     }
     
-    public struct CommunityWithInfo: Codable {
-        public let community: ApiCommunityData
+    public struct CommunityFollowerView: Codable {
+        public let community: Community
+        public let follower: Person
     }
     
     public enum TopTime: String, CaseIterable, Codable {

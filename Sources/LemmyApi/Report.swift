@@ -17,7 +17,7 @@ public extension LemmyApi {
     }
 
     struct PostReportResponse: Codable {
-        public let post_report_view: ApiPost
+        public let post_report_view: PostView
     }
     
     struct PostReport: Codable, WithMethod {
@@ -28,7 +28,7 @@ public extension LemmyApi {
     }
 
     struct CommentReportResponse: Codable {
-        public let comment_report_view: ApiComment
+        public let comment_report_view: CommentView
     }
 
     struct CommentReport: Codable, WithMethod {

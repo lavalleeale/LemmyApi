@@ -6,12 +6,12 @@ import CombineX
 #endif
 
 public extension LemmyApi {
-    func voteComment(id: Int, target: Int, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment/like", responseType: CommentView.self, body: CommentVote(auth: jwt!, comment_id: id, score: target), receiveValue: receiveValue)
+    func voteComment(id: Int, target: Int, receiveValue: @escaping (CommentResponse?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment/like", responseType: CommentResponse.self, body: CommentVote(auth: jwt!, comment_id: id, score: target), receiveValue: receiveValue)
     }
 
-    func votePost(id: Int, target: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "post/like", responseType: PostView.self, body: PostVote(auth: jwt!, post_id: id, score: target), receiveValue: receiveValue)
+    func votePost(id: Int, target: Int, receiveValue: @escaping (GetPostResponse?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "post/like", responseType: GetPostResponse.self, body: PostVote(auth: jwt!, post_id: id, score: target), receiveValue: receiveValue)
     }
     
     struct CommentVote: Codable, WithMethod {

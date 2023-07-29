@@ -6,22 +6,22 @@ import CombineX
 import Foundation
 
 public extension LemmyApi {
-    func createPost(title: String, content: String, url: String, communityId: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
+    func createPost(title: String, content: String, url: String, communityId: Int, receiveValue: @escaping (GetPostResponse?, NetworkError?) -> Void) -> AnyCancellable {
         let body = SentPost(auth: self.jwt!, community_id: communityId, name: title, url: url == "" ? nil : url, body: content)
-        return makeRequestWithBody(path: "post", responseType: PostView.self, body: body, receiveValue: receiveValue)
+        return makeRequestWithBody(path: "post", responseType: GetPostResponse.self, body: body, receiveValue: receiveValue)
     }
     
-    func addComment(content: String, postId: Int, parentId: Int?, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment", responseType: CommentView.self, body: SentComment(auth: jwt!, content: content, parent_id: parentId, post_id: postId), receiveValue: receiveValue)
+    func addComment(content: String, postId: Int, parentId: Int?, receiveValue: @escaping (CommentResponse?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment", responseType: CommentResponse.self, body: SentComment(auth: jwt!, content: content, parent_id: parentId, post_id: postId), receiveValue: receiveValue)
     }
     
-    func editComment(content: String, commentId: Int, receiveValue: @escaping (CommentView?, NetworkError?) -> Void) -> AnyCancellable {
-        return makeRequestWithBody(path: "comment", responseType: CommentView.self, body: EditedComment(auth: jwt!, content: content, comment_id: commentId), receiveValue: receiveValue)
+    func editComment(content: String, commentId: Int, receiveValue: @escaping (CommentResponse?, NetworkError?) -> Void) -> AnyCancellable {
+        return makeRequestWithBody(path: "comment", responseType: CommentResponse.self, body: EditedComment(auth: jwt!, content: content, comment_id: commentId), receiveValue: receiveValue)
     }
     
-    func editPost(title: String, content: String, url: String, postId: Int, receiveValue: @escaping (PostView?, NetworkError?) -> Void) -> AnyCancellable {
+    func editPost(title: String, content: String, url: String, postId: Int, receiveValue: @escaping (GetPostResponse?, NetworkError?) -> Void) -> AnyCancellable {
         let body = EditedPost(post_id: postId, auth: self.jwt!, name: title, url: url == "" ? nil : url, body: content)
-        return makeRequestWithBody(path: "post", responseType: PostView.self, body: body, receiveValue: receiveValue)
+        return makeRequestWithBody(path: "post", responseType: GetPostResponse.self, body: body, receiveValue: receiveValue)
     }
     
     struct EditedPost: Codable, WithMethod {
