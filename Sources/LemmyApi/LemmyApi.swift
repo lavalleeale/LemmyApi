@@ -421,7 +421,7 @@ public class LemmyApi {
         
         public var id: Int { comment.id }
         
-        public let comment: Comment
+        public var comment: Comment
         public let creator: Person
         public let post: Post
         public let counts: CommentAggregates
@@ -439,7 +439,7 @@ public class LemmyApi {
         public let ap_id: URL
         public let local: Bool
         public let deleted: Bool
-        public let removed: Bool
+        public var removed: Bool
         public let distinguished: Bool
     }
     
