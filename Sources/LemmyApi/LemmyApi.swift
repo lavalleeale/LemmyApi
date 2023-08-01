@@ -538,12 +538,18 @@ public class LemmyApi {
     
     public struct PostAggregates: Codable, WithPublished {
         public let score: Int
+        public let upvotes: Int
+        public let downvotes: Int
+
         public let comments: Int
         public let published: Date
     }
     
     public struct CommentAggregates: Codable, WithPublished {
         public let score: Int
+        public let upvotes: Int
+        public let downvotes: Int
+        
         public let child_count: Int
         public let published: Date
     }
