@@ -98,5 +98,6 @@ public extension LemmyApi {
         public let published: Date
         public var read: Bool
         public let id: Int
+        public let ap_id: URL
     }
 }
