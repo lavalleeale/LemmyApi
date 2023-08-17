@@ -59,6 +59,30 @@ public extension LemmyApi {
         let query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "limit", value: String(limit))]
         return makeRequest(path: "community/list", query: query, responseType: ApiCommunities.self, receiveValue: receiveValue)
     }
+
+    func getPostReports(page: Int = 0, unresolved_only: Bool = true, community_id: Int? = nil, receiveValue: @escaping (LemmyApi.ListPostReportsResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        var query = [URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "limit", value: "20"), URLQueryItem(name: "unresolved_only", value: String(unresolved_only))]
+        if let community_id = community_id {
+            query.append(URLQueryItem(name: "community_id", value: String(community_id)))
+        }
+        return makeRequest(path: "post/report/list", query: query, responseType: ListPostReportsResponse.self, receiveValue: receiveValue)
+    }
+    
+    func getCommentReports(page: Int = 0, unresolved_only: Bool = true, community_id: Int? = nil, receiveValue: @escaping (LemmyApi.ListCommentReportsResponse?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        var query = [URLQueryItem(name: "page", value: String(page)), URLQueryItem(name: "limit", value: "20"), URLQueryItem(name: "unresolved_only", value: String(unresolved_only))]
+        if let community_id = community_id {
+            query.append(URLQueryItem(name: "community_id", value: String(community_id)))
+        }
+        return makeRequest(path: "comment/report/list", query: query, responseType: ListCommentReportsResponse.self, receiveValue: receiveValue)
+    }
+    
+    struct ListPostReportsResponse: Codable {
+        public let post_reports: [PostReportView]
+    }
+    
+    struct ListCommentReportsResponse: Codable {
+        public let comment_reports: [CommentReportView]
+    }
     
     struct PrivateMessageView: Codable {
         public let private_message_view: Message
