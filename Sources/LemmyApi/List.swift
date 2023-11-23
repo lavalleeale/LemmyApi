@@ -51,6 +51,15 @@ public extension LemmyApi {
         return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
     }
 
+    func getPosts(id: Int, pageCursor: String, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        var sortString: String = sort.rawValue
+        if sort == .Top {
+            sortString += time.rawValue
+        }
+        let query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page_cursor", value: pageCursor), URLQueryItem(name: "community_id", value: String(id)), URLQueryItem(name: "limit", value: String(limit))]
+        return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
+    }
+
     func getComments(postId: Int, parentId: Int? = nil, sort: LemmyApi.Sort, receiveValue: @escaping (LemmyApi.ApiComments?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var query = [URLQueryItem(name: "sort", value: sort.rawValue), URLQueryItem(name: "post_id", value: String(postId)), URLQueryItem(name: "max_depth", value: "8"), URLQueryItem(name: "type_", value: "All")]
         if let parentId = parentId {
