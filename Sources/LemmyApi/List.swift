@@ -24,6 +24,24 @@ public extension LemmyApi {
         return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
     }
     
+    func getPosts(path: String, pageCursor: String, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
+        var sortString: String = sort.rawValue
+        if sort == .Top {
+            sortString += time.rawValue
+        }
+        var query = [URLQueryItem(name: "sort", value: sortString), URLQueryItem(name: "page_cursor", value: pageCursor), URLQueryItem(name: "limit", value: String(limit))]
+        if path == "Subscribed" {
+            if jwt != nil {
+                query.append(URLQueryItem(name: "type_", value: "Subscribed"))
+            }
+        } else if path == "All" {
+            query.append(URLQueryItem(name: "type_", value: "All"))
+        } else if path != "Local" && path != "" {
+            query.append(URLQueryItem(name: "community_name", value: path))
+        }
+        return makeRequest(path: "post/list", query: query, responseType: ApiPosts.self, receiveValue: receiveValue)
+    }
+    
     func getPosts(id: Int, page: Int, sort: LemmyApi.Sort, time: LemmyApi.TopTime, limit: Int = 20, receiveValue: @escaping (LemmyApi.ApiPosts?, LemmyApi.NetworkError?) -> Void) -> AnyCancellable {
         var sortString: String = sort.rawValue
         if sort == .Top {
@@ -94,6 +112,7 @@ public extension LemmyApi {
     
     struct ApiPosts: Codable {
         public let posts: [PostView]
+        public let next_page: String?
     }
     
     struct ApiCommunities: Codable {

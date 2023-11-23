@@ -37,9 +37,9 @@ let decoder = {
         let dateStr = try container.decode(String.self)
         var date: Date?
         if dateStr.contains(".") {
-            date = formatter1.date(from: dateStr)
+            date = formatter1.date(from: dateStr.replacingOccurrences(of: "Z", with: ""))
         } else {
-            date = formatter2.date(from: dateStr)
+            date = formatter2.date(from: dateStr.replacingOccurrences(of: "Z", with: ""))
         }
         guard let date_ = date else {
             throw DecodingError.dataCorruptedError(in: container, debugDescription: "Cannot decode date string \(dateStr)")
