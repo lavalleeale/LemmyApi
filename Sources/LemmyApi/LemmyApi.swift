@@ -103,6 +103,9 @@ public class LemmyApi {
         }
         var request = URLRequest(url: newUrlComponents.url!)
         request.setValue("ios:com.axlav.lemmios:v1.0.0 (by @mrlavallee@lemmy.world)", forHTTPHeaderField: "User-Agent")
+        if let jwt = jwt {
+            request.setValue("Bearer \(jwt)", forHTTPHeaderField: "Authorization")
+        }
         request.httpMethod = body.method
         if !(body is NoBody) {
             request.httpBody = try! encoder.encode(body)
@@ -555,8 +558,6 @@ public class LemmyApi {
     }
     
     public struct PersonAggregates: Codable {
-        public let comment_score: Int
-        public let post_score: Int
         public let comment_count: Int
         public let post_count: Int
     }
